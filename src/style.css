@@ -3,11 +3,19 @@ body {
   margin: 10px;
 }
 
-.notice {
-  color: red;
+.error, .notice {
   font-weight: bold;
-  border: 1px solid red;
   padding: 4px;
+}
+
+.error {
+  color: red;
+  border: 1px solid red;
+}
+
+.notice {
+  color: #6cd667;
+  border: 1px solid #6cd667;
 }
 
 #note-title, #note-content {

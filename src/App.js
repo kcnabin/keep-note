@@ -1,19 +1,49 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import './style.css'
+import noteRequests from './noteRequests'
 
 const App = () => {
   const [title, setTitle] = useState('')
   const [noteContent, setNoteContent] = useState('')
   const [notice, setNotice] = useState(null)
+  const [error, setError] = useState(null)
+  const [allNotes, setAllNotes] = useState('')
+
+  const displayNotice = text => {
+    setNotice(text)
+    setTimeout(() => {
+      setNotice(null)
+    }, 4000)
+  }
+
+  const displayError = text => {
+    setError(text)
+    setTimeout(() => {
+      setError(null)
+    }, 5000)
+  }
+
+  useEffect(() => {
+    try {
+      const initialNotes = noteRequests.getAll()
+      setAllNotes(initialNotes)
+
+      displayNotice('Initial data fetched from server!')
+
+    } catch (error) {
+      console.log(error)
+
+      displayError("Can't fetch initial data")
+    }
+  }, [])
 
   const saveNote = e => {
     e.preventDefault()
+    console.log('Add note clicked')
 
     if (noteContent === '') {
-      setNotice(`Can't save a note without content`)
-      setTimeout(() => {
-        setNotice(null)
-      }, 4000)
+      displayError(`Can't save a note without content`)
+      return
     }
 
   }
@@ -51,6 +81,7 @@ const App = () => {
     <div>
       <Title text="Keep your notes safe!" />
       <Notice notice={notice} />
+      <Error error={error} />
       
       {newNoteForm()}
 
@@ -61,9 +92,17 @@ const App = () => {
 }
 
 const Title = ({ text }) => <h3>{text}</h3>
+
 const Notice = ({ notice }) => {
   if (notice) {
     return (<h3 className="notice">{notice}</h3>)
+  }
+  return null
+}
+
+const Error = ({ error }) => {
+  if (error) {
+    return (<h3 className="error">{error}</h3>)
   }
   return null
 }
