@@ -1,0 +1,16 @@
+body {
+  padding: 0;
+  margin: 10px;
+}
+
+.notice {
+  color: red;
+  font-weight: bold;
+  border: 1px solid red;
+  padding: 4px;
+}
+
+#note-title, #note-content {
+  padding: 4px;
+  margin-bottom: 8px;
+}
