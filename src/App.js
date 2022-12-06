@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import './style.css'
-import noteRequests from './noteRequests'
+import axios from 'axios'
 
 const App = () => {
+  const baseUrl = 'http://localhost:3001/api/notes'
   const [title, setTitle] = useState('')
   const [noteContent, setNoteContent] = useState('')
   const [notice, setNotice] = useState(null)
   const [error, setError] = useState(null)
-  const [allNotes, setAllNotes] = useState('')
+
+  const [notes, setNotes] = useState([])
 
   const displayNotice = text => {
     setNotice(text)
@@ -23,20 +25,21 @@ const App = () => {
     }, 5000)
   }
 
+  // fetching initial data using effect hook
   useEffect(() => {
-    try {
-      const initialNotes = noteRequests.getAll()
-      setAllNotes(initialNotes)
-
-      displayNotice('Initial data fetched from server!')
-
-    } catch (error) {
-      console.log(error)
-
-      displayError("Can't fetch initial data")
-    }
+    axios
+      .get(baseUrl)
+      .then(returnedNotes => {
+        setNotes(notes.concat(returnedNotes.data))
+        displayNotice('Fetched initial notes sucessfully')
+      })
+      .catch(error => {
+        console.log(error)
+        displayError(`Can't fetch initial notes`)
+      })
   }, [])
 
+  // saving data from the form
   const saveNote = e => {
     e.preventDefault()
     console.log('Add note clicked')
@@ -85,8 +88,42 @@ const App = () => {
       
       {newNoteForm()}
 
-      
+      <PinnedNotes notes={notes} title="Pinned Notes" />
+      <OtherNotes notes={notes} title="Other Notes" />
 
+    </div>
+  )
+}
+
+const PinnedNotes = ({ notes, title }) => {
+  const pin = notes.filter(note => note.pinned)
+
+  return (
+    <div>
+      <h3>{title}</h3>
+      <ul>
+        {
+          pin.map((note, i) => {
+            return (<Note key={i} note={note} />)
+          })
+        }
+      </ul>
+    </div>
+  )
+}
+
+const Note = ({ note }) => <li>{note.content}</li>
+
+const OtherNotes = ({ notes, title }) => {
+  const notPin = notes.filter(note => !note.pinned)
+  return (
+    <div>
+      <h3>{title}</h3>
+      {
+        notPin.map((note, i) => {
+        return (<Note note={note} key={i}/>)
+      })
+      }
     </div>
   )
 }
