@@ -15,14 +15,14 @@ const App = () => {
     setNotice(text)
     setTimeout(() => {
       setNotice(null)
-    }, 4000)
+    }, 5000)
   }
 
   const displayError = text => {
     setError(text)
     setTimeout(() => {
       setError(null)
-    }, 5000)
+    }, 10000)
   }
 
   // fetching initial data using effect hook
@@ -48,6 +48,27 @@ const App = () => {
       displayError(`Can't save a note without content`)
       return
     }
+
+    const noteObject = {
+      title: title,
+      content: noteContent,
+      pinned: true
+    }
+
+    axios
+      .post(baseUrl, noteObject)
+      .then(response => {
+        const returnedNote = response.data
+        setNotes(notes.concat(returnedNote))
+
+        displayNotice('Note saved successfully')
+        setTitle('')
+        setNoteContent('')
+      })
+      .catch(error => {
+        console.log(error)
+        displayError('Error saving note!')
+      })
 
   }
 
