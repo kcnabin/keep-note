@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react'
 import './style.css'
 import axios from 'axios'
 
+const baseUrl = 'http://localhost:3001/api/notes'
+
 const App = () => {
-  const baseUrl = 'http://localhost:3001/api/notes'
+  
   const [title, setTitle] = useState('')
   const [noteContent, setNoteContent] = useState('')
   const [notice, setNotice] = useState(null)
@@ -109,14 +111,14 @@ const App = () => {
       
       {newNoteForm()}
 
-      <PinnedNotes notes={notes} title="Pinned Notes" />
-      <OtherNotes notes={notes} title="Other Notes" />
+      <PinnedNotes notes={notes} title="Pinned Notes" setNotes={setNotes}/>
+      <OtherNotes notes={notes} title="Other Notes" setNotes={setNotes} />
 
     </div>
   )
 }
 
-const PinnedNotes = ({ notes, title }) => {
+const PinnedNotes = ({ notes, title, setNotes }) => {
   const pin = notes.filter(note => note.pinned)
 
   return (
@@ -125,7 +127,7 @@ const PinnedNotes = ({ notes, title }) => {
       <ul>
         {
           pin.map((note, i) => {
-            return (<Note key={i} note={note} />)
+            return (<Note key={i} note={note} setNotes={setNotes} notes={notes} />)
           })
         }
       </ul>
@@ -133,18 +135,45 @@ const PinnedNotes = ({ notes, title }) => {
   )
 }
 
-const Note = ({ note }) => <li>{note.content}</li>
+const Note = ({ note, setNotes, notes }) => {
 
-const OtherNotes = ({ notes, title }) => {
+
+  return (
+    <li>
+      {note.content} 
+      <button 
+        onClick={() => {
+          if (window.confirm(`Do you want to delete note '${note.content}?' `)) {
+            console.log('Note to delete ', note.id)
+            const deleteUrl = `${baseUrl}/${note.id}`
+            axios
+              .delete(deleteUrl)
+              .then(response => {
+                console.log(`Note '${note.title}' deleted successfully`)
+                setNotes(notes.filter(newNote => newNote.id !== note.id))
+              })
+              .catch(error => {
+                console.log(error)
+              })
+          }
+        }}
+      >Delete</button>
+    </li>
+  )
+}
+
+const OtherNotes = ({ notes, title, setNotes }) => {
   const notPin = notes.filter(note => !note.pinned)
   return (
     <div>
       <h3>{title}</h3>
-      {
-        notPin.map((note, i) => {
-        return (<Note note={note} key={i}/>)
-      })
-      }
+      <ul>
+        {
+          notPin.map((note, i) => {
+            return (<Note note={note} key={i} setNotes={setNotes} notes={notes} />)
+          })
+        }
+      </ul>
     </div>
   )
 }
