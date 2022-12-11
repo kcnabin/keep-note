@@ -16,13 +16,15 @@ const App = () => {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [currentUser, setCurrentUser] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
+
+  const [token, setToken] = useState(null)
 
   const displayNotice = text => {
     setNotice(text)
     setTimeout(() => {
       setNotice(null)
-    }, 5000)
+    }, 3000)
   }
 
   const displayError = text => {
@@ -62,8 +64,12 @@ const App = () => {
       pinned: true
     }
 
+    const config = {
+      headers: {Authorization: token}
+    }
+
     axios
-      .post(baseUrl, noteObject)
+      .post(baseUrl, noteObject, config)
       .then(response => {
         const returnedNote = response.data
         setNotes(notes.concat(returnedNote))
@@ -79,32 +85,51 @@ const App = () => {
 
   }
 
+  const displayUser = () => {
+    const logOut = () => {
+      setCurrentUser(null)
+      setToken(null)
+    }
+
+    if (currentUser) {
+      return <p>
+              Welcome <em>{currentUser.username} </em>
+              <button onClick={logOut}>
+                Log Out
+              </button>
+             </p>
+    }
+    return null
+  }
   const newNoteForm = () => {
     return (
-      <form onSubmit={saveNote}>
-        <div>
-          <h3>Add new note</h3>
-          <input 
-            type="text"
-            id="note-title"
-            placeholder="Note Title"
-            value={title}
-            onChange={({ target }) => setTitle(target.value)}
-          />
-        </div>  
-        
-        <div>
-          <input 
-            type="text"
-            id="note-content"
-            placeholder="Enter your notes here"
-            value={noteContent}
-            onChange={({ target }) => setNoteContent(target.value)}
-          />
-        </div>
+      <div>
+        {displayUser()}
+        <form onSubmit={saveNote}>
+          <div>
+            <h3>Add new note</h3>
+            <input 
+              type="text"
+              id="note-title"
+              placeholder="Note Title"
+              value={title}
+              onChange={({ target }) => setTitle(target.value)}
+            />
+          </div>  
+          
+          <div>
+            <input 
+              type="text"
+              id="note-content"
+              placeholder="Enter your notes here"
+              value={noteContent}
+              onChange={({ target }) => setNoteContent(target.value)}
+            />
+          </div>
 
-        <button type="submit">Add Note</button>
-      </form>
+          <button type="submit">Add Note</button>
+        </form>
+      </div>
     )
   }
 
@@ -118,7 +143,8 @@ const App = () => {
 
     try {
       const loggedInUser = await axios.post(loginUrl, loginObject)
-      setCurrentUser(currentUser.concat(loggedInUser.data))
+      setCurrentUser(loggedInUser.data)
+      setToken(`bearer ${loggedInUser.data.token}`)
 
       displayNotice('Logged in successfully!')
       setUsername('')
@@ -167,19 +193,36 @@ const App = () => {
       <Notice notice={notice} />
       <Error error={error} />
 
-      {loginForm()}
-      
-      {newNoteForm()}
+      {currentUser ? newNoteForm() : loginForm()}
 
-      <PinnedNotes notes={notes} title="Pinned Notes" setNotes={setNotes}/>
-      <OtherNotes notes={notes} title="Other Notes" setNotes={setNotes} />
+      <PinnedNotes 
+        notes={notes} 
+        title="Pinned Notes" 
+        setNotes={setNotes}
+        currentUser={currentUser}
+      />
+
+      <OtherNotes 
+        notes={notes} 
+        title="Other Notes" 
+        setNotes={setNotes} 
+        currentUser={currentUser}
+      />
 
     </div>
   )
 }
 
-const PinnedNotes = ({ notes, title, setNotes }) => {
-  const pin = notes.filter(note => note.pinned)
+const PinnedNotes = ({ notes, title, setNotes, currentUser }) => {
+  if (!currentUser) {
+    return
+  }
+
+  const newNotes = currentUser
+    ? notes.filter(note => note.user === currentUser.id)
+    : notes
+
+  const pin = newNotes.filter(note => note.pinned)
 
   return (
     <div>
@@ -222,8 +265,16 @@ const Note = ({ note, setNotes, notes }) => {
   )
 }
 
-const OtherNotes = ({ notes, title, setNotes }) => {
-  const notPin = notes.filter(note => !note.pinned)
+const OtherNotes = ({ notes, title, setNotes, currentUser }) => {
+  if (!currentUser) {
+    return
+  }
+
+  const newNotes = currentUser
+    ? notes.filter(note => note.user === currentUser.id)
+    : notes
+
+  const notPin = newNotes.filter(note => !note.pinned)
   return (
     <div>
       <h3>{title}</h3>
