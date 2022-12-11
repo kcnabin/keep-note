@@ -3,6 +3,11 @@ ul, li {
   padding: ;
 }
 
+input {
+  padding: 4px;
+  margin-bottom: 8px;
+}
+
 .error, .notice {
   font-weight: bold;
   padding: 4px;
@@ -16,9 +21,4 @@ ul, li {
 .notice {
   color: #6cd667;
   border: 1px solid #6cd667;
-}
-
-#note-title, #note-content {
-  padding: 4px;
-  margin-bottom: 8px;
 }

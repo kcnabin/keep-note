@@ -3,6 +3,7 @@ import './style.css'
 import axios from 'axios'
 
 const baseUrl = 'http://localhost:3001/api/notes'
+const loginUrl = 'http://localhost:3001/api/login'
 
 const App = () => {
   
@@ -12,6 +13,10 @@ const App = () => {
   const [error, setError] = useState(null)
 
   const [notes, setNotes] = useState([])
+
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [currentUser, setCurrentUser] = useState([])
 
   const displayNotice = text => {
     setNotice(text)
@@ -78,7 +83,7 @@ const App = () => {
     return (
       <form onSubmit={saveNote}>
         <div>
-          <p>Add new note</p>
+          <h3>Add new note</h3>
           <input 
             type="text"
             id="note-title"
@@ -103,11 +108,66 @@ const App = () => {
     )
   }
 
+  const handleLogin = async (e) => {
+    e.preventDefault()
+
+    const loginObject = {
+      username,
+      password
+    }
+
+    try {
+      const loggedInUser = await axios.post(loginUrl, loginObject)
+      setCurrentUser(currentUser.concat(loggedInUser.data))
+
+      displayNotice('Logged in successfully!')
+      setUsername('')
+      setPassword('')
+
+    } catch (error) {
+      console.log(error)
+      displayError('Failed to login...')
+    }
+
+  }
+
+  const loginForm = () => {
+    return (
+      <form onSubmit={handleLogin}>
+        <h3>Login</h3>
+
+        <div>
+          <label htmlFor="username">Username: </label>
+          <input 
+            type="text" 
+            id="username" 
+            value={username}
+            onChange={({ target }) => setUsername(target.value)}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="password">Password: </label>
+          <input 
+            type="password"
+            id="password"
+            value={password}
+            onChange={({ target }) => setPassword(target.value)}
+          />
+        </div>
+
+        <button type="submit">Login</button>
+      </form>
+    )
+  }
+
   return (
     <div>
       <Title text="Keep your notes safe!" />
       <Notice notice={notice} />
       <Error error={error} />
+
+      {loginForm()}
       
       {newNoteForm()}
 
